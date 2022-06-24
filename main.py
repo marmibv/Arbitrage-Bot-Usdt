@@ -237,6 +237,6 @@ if __name__ == "__main__":
 
     DEPOSIT = 100
     BID_ASK_OFFSET = 1
-    COMMISSION_RATE = 0.0075
+    COMMISSION_RATE = 0.001
 
     main()
