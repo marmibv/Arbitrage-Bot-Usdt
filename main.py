@@ -131,12 +131,15 @@ def find_appropriate_chain(chains):
             for i in range(len(chains)):
                 chain = chains[i]
                 approximate_profit_after_fees = calculate_chain(chain)
+                if approximate_profit_after_fees > DEPOSIT:
+                    print("\t\t", " ".join(chain))
+                    print("\t\t", f"{approximate_profit_after_fees} USDT")
+                    print("\t\t", f"Profit: {round((approximate_profit_after_fees / DEPOSIT - 1) * 100, 2)}%")
+                    return chain
                 print(" ".join(chain))
                 print(f"{approximate_profit_after_fees} USDT")
                 print(f"Profit: {round((approximate_profit_after_fees / DEPOSIT - 1) * 100, 2)}%")
                 print()
-                if approximate_profit_after_fees > DEPOSIT:
-                    return chain, approximate_profit_after_fees
             print()
     else:
         print("\nThere's no single chain :(")
@@ -180,9 +183,9 @@ def calculate_chain(chain):
     coins = DEPOSIT
     strategy = define_strategy(chain)
     coins_on_stage = []
-    for j in range(len(chain)):
-        pair = chain[j]
-        action = strategy[j]
+    for i in range(len(chain)):
+        pair = chain[i]
+        action = strategy[i]
         orders = client.get_order_book(symbol=pair)
 
         if action == "BUY":
@@ -198,8 +201,39 @@ def calculate_chain(chain):
     return coins_on_stage[-1]
 
 
+# TODO: here is the second time, when define strategy is called, so, maybe I should fix it
 def execute_chain(chain):
-    pass
+    coins = DEPOSIT
+    strategy = define_strategy(chain)
+    for i in range(len(chain)):
+        pair = chain[i]
+        action = strategy[i]
+        if action == "BUY":
+            buy_market(pair, coins)
+        else:
+            sell_market(pair, coins)
+
+
+# TODO: replace with the real market order (only when everything is done!)
+def buy_market(pair, coins):
+    client.create_test_order(
+        symbol=pair,
+        side=Client.SIDE_BUY,
+        type=Client.ORDER_TYPE_MARKET,
+        quantity=coins
+    )
+    print("\t\t", f"BUY {coins} {pair}")
+
+
+# TODO: replace with the real market order (only when everything is done!)
+def sell_market(pair, coins):
+    client.create_test_order(
+        symbol=pair,
+        side=Client.SIDE_SELL,
+        type=Client.ORDER_TYPE_MARKET,
+        quantity=coins
+    )
+    print("\t\t", f"SELL {coins} {pair}")
 
 
 # TODO: make a timer that updates every 24h to recalculate whitelist
@@ -218,7 +252,6 @@ def main():
     chains = get_chains(whitelist)
 
     appropriate_chain = find_appropriate_chain(chains)
-    print("\t\t", appropriate_chain)
     execute_chain(appropriate_chain)
 
 
@@ -237,6 +270,6 @@ if __name__ == "__main__":
 
     DEPOSIT = 100
     BID_ASK_OFFSET = 1
-    COMMISSION_RATE = 0.001
+    COMMISSION_RATE = 0.000
 
     main()
